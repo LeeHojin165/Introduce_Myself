@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이호진 | AI 엔지니어</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // 클래스 기반 다크모드 활성화
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#0A0A0F',
+                            pink: '#FF2DAA',
+                            purple: '#7B2CFF',
+                            blue: '#00A3FF',
+                            cyan: '#00FFD5',
+                            muted: '#a0a0a5'
+                        }
+                    },
+                    animation: {
+                        'gradient-x': 'gradient-x 5s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'morph': 'morph 8s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 3s infinite',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        'morph': {
+                            '0%, 100%': { borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%' },
+                            '34%': { borderRadius: '70% 30% 50% 50% / 30% 30% 70% 70%' },
+                            '67%': { borderRadius: '100% 60% 60% 100% / 100% 100% 60% 60%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 기본 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #7B2CFF; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00FFD5; }
+
+        /* 커스텀 마우스 커서 숨김 처리 (데스크톱만) */
+        @media (pointer: fine) {
+            body { cursor: none; }
+            a, button, input, textarea { cursor: none !important; }
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* 형광펜, 네온 효과 커스텀 유틸리티 */
+        .text-neon-cyan {
+            text-shadow: 0 0 10px rgba(0, 255, 213, 0.5), 0 0 20px rgba(0, 255, 213, 0.3);
+        }
+        
+        /* 페이지 트랜지션 효과 */
+        .page-view {
+            display: none;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+        .page-view.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* 커스텀 커서 스타일 */
+        #custom-cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 20px; height: 20px;
+            border: 2px solid var(--color-cyan, #00FFD5);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            mix-blend-mode: difference;
+        }
+        #custom-cursor.hovering {
+            width: 40px; height: 40px;
+            background-color: rgba(0, 255, 213, 0.2);
+            border-color: #FF2DAA;
+        }
+
+        /* 2048 게임 스타일 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 16px;
+            touch-action: none; /* 터치 스크롤 방지 */
+        }
+        .dark .game-grid { background-color: rgba(0, 0, 0, 0.4); }
+        
+        .game-cell {
+            width: 60px; height: 60px;
+            border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; font-weight: 800;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: transparent;
+            transition: transform 0.15s ease-in-out, background-color 0.2s, box-shadow 0.2s;
+        }
+        @media (min-width: 768px) {
+            .game-cell { width: 80px; height: 80px; font-size: 2rem; }
+        }
+
+        /* 타일 색상 및 네온 효과 */
+        .tile-2 { background-color: #1f2937; color: #00FFD5; box-shadow: inset 0 0 15px rgba(0,255,213,0.1); }
+        .tile-4 { background-color: #374151; color: #00A3FF; box-shadow: inset 0 0 15px rgba(0,163,255,0.2); }
+        .tile-8 { background-color: #4b5563; color: #7B2CFF; box-shadow: inset 0 0 20px rgba(123,44,255,0.3); }
+        .tile-16 { background-color: #6b7280; color: #FF2DAA; box-shadow: inset 0 0 20px rgba(255,45,170,0.3); }
+        .tile-32 { background-color: #00FFD5; color: #0A0A0F; box-shadow: 0 0 15px rgba(0,255,213,0.4); }
+        .tile-64 { background-color: #00A3FF; color: #ffffff; box-shadow: 0 0 20px rgba(0,163,255,0.5); }
+        .tile-128 { background-color: #7B2CFF; color: #ffffff; box-shadow: 0 0 25px rgba(123,44,255,0.6); font-size: 1.7rem; }
+        .tile-256 { background-color: #FF2DAA; color: #ffffff; box-shadow: 0 0 30px rgba(255,45,170,0.7); font-size: 1.7rem; }
+        .tile-512 { background-color: #FBBF24; color: #0A0A0F; box-shadow: 0 0 35px rgba(251,191,36,0.8); font-size: 1.5rem; }
+        .tile-1024 { background-color: #EF4444; color: #ffffff; box-shadow: 0 0 40px rgba(239,68,68,0.9); font-size: 1.2rem; }
+        .tile-super { background: linear-gradient(135deg, #FF2DAA, #00FFD5); color: white; box-shadow: 0 0 40px rgba(255,255,255,0.8); font-size: 1.2rem; }
+
+        .tile-pop { animation: popIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Cat Room 스타일 */
+        #the-cat { transition: left 0.3s ease, top 0.3s ease, transform 0.3s ease; user-select: none; z-index: 100; touch-action: none; }
+        .belly-rub { transform: rotate(180deg) scale(1.2) !important; }
+        .chasing-mode { position: fixed !important; transition: left 0.15s linear, top 0.15s linear; }
+        .cat-prop { transition: transform 0.2s, left 0.5s ease, top 0.5s ease; cursor: pointer; }
+        .cat-prop:hover { transform: scale(1.15) rotate(-5deg); filter: drop-shadow(0 0 10px rgba(255,45,170,0.6)); }
+        #cat-message-box { transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 dark:bg-brand-bg dark:text-white min-h-screen flex flex-col relative">
+
+    <!-- 커스텀 커서 (도전 아이디어) -->
+    <div id="custom-cursor" class="hidden md:block"></div>
+
+    <!-- 파티클 배경 캔버스 (도전 아이디어) -->
+    <canvas id="particles-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- 스크롤 진행률 상단 바 (도전 아이디어) -->
+    <div class="fixed top-0 left-0 h-1 bg-gradient-to-r from-brand-cyan to-brand-blue z-[60] w-0 transition-all duration-100 ease-out" id="scroll-progress"></div>
+
+    <!-- 글로벌 네비게이션 바 -->
+    <nav class="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 dark:bg-brand-bg/80 border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 로고 -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer nav-link" data-target="home">
+                    <span class="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-brand-pink to-brand-cyan">HOJIN.</span>
+                </div>
+                
+                <!-- 데스크톱 메뉴 -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <button class="nav-link text-gray-600 hover:text-brand-cyan dark:text-gray-300 dark:hover:text-brand-cyan font-medium transition-colors active-nav" data-target="home" data-i18n="nav_home">홈</button>
+                    <button class="nav-link text-gray-600 hover:text-brand-cyan dark:text-gray-300 dark:hover:text-brand-cyan font-medium transition-colors" data-target="about" data-i18n="nav_about">소개</button>
+                    <button class="nav-link text-gray-600 hover:text-brand-cyan dark:text-gray-300 dark:hover:text-brand-cyan font-medium transition-colors" data-target="projects" data-i18n="nav_projects">프로젝트</button>
+                    <!-- 새로 추가된 2048 게임 메뉴 -->
+                    <button class="nav-link text-gray-600 hover:text-brand-cyan dark:text-gray-300 dark:hover:text-brand-cyan font-medium transition-colors" data-target="game2048" data-i18n="nav_game2048">2048 게임</button>
+                    <!-- 새로 추가된 Cat Room 메뉴 -->
+                    <button class="nav-link text-gray-600 hover:text-brand-cyan dark:text-gray-300 dark:hover:text-brand-cyan font-medium transition-colors" data-target="catroom" data-i18n="nav_catroom">Cat Room</button>
+                    <button class="nav-link text-gray-600 hover:text-brand-cyan dark:text-gray-300 dark:hover:text-brand-cyan font-medium transition-colors" data-target="guestbook" data-i18n="nav_guestbook">방명록</button>
+                    
+                    <div class="border-l border-gray-300 dark:border-gray-700 h-6 mx-2"></div>
+                    
+                    <!-- 기능 토글 버튼들 -->
+                    <button id="lang-toggle" class="text-sm font-bold w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center hover:scale-110 transition-transform">KO</button>
+                    <button id="theme-toggle" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center hover:scale-110 transition-transform">
+                        <span class="dark:hidden">🌙</span>
+                        <span class="hidden dark:block">☀️</span>
+                    </button>
+                </div>
+
+                <!-- 모바일 메뉴 버튼 (간소화) -->
+                <div class="md:hidden flex items-center space-x-4">
+                    <button id="theme-toggle-mobile" class="text-xl"><span class="dark:hidden">🌙</span><span class="hidden dark:block">☀️</span></button>
+                    <button id="mobile-menu-btn" class="text-gray-600 dark:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 모바일 드롭다운 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-brand-bg border-b border-gray-200 dark:border-white/10">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 flex flex-col">
+                <button class="nav-link block px-3 py-2 text-left font-medium text-brand-cyan" data-target="home" data-i18n="nav_home">홈</button>
+                <button class="nav-link block px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300" data-target="about" data-i18n="nav_about">소개</button>
+                <button class="nav-link block px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300" data-target="projects" data-i18n="nav_projects">프로젝트</button>
+                <!-- 새로 추가된 2048 게임 모바일 메뉴 -->
+                <button class="nav-link block px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300" data-target="game2048" data-i18n="nav_game2048">2048 게임</button>
+                <!-- 새로 추가된 Cat Room 메뉴 -->
+                <button class="nav-link block px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300" data-target="catroom" data-i18n="nav_catroom">Cat Room</button>
+                <button class="nav-link block px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300" data-target="guestbook" data-i18n="nav_guestbook">방명록</button>
+                <button id="lang-toggle-mobile" class="block px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Language: KO 🔄</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 영역 (페이지 뷰 라우팅) -->
+    <main class="flex-grow pt-16 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- ==================== HOME PAGE ==================== -->
+        <div id="page-home" class="page-view active min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center text-center">
+            <!-- 장식용 빛(배경) -->
+            <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-brand-pink/20 rounded-full blur-[80px] animate-float z-[-1]"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-cyan/20 rounded-full blur-[80px] animate-float z-[-1]" style="animation-delay: -3s;"></div>
+
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6" data-i18n="hero_title">
+                안녕하세요, <br class="md:hidden">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-pink via-brand-purple to-brand-cyan animate-gradient-x">이호진</span>입니다.
+            </h1>
+            <p class="text-lg md:text-2xl text-gray-600 dark:text-brand-muted max-w-2xl mx-auto mb-10 leading-relaxed" data-i18n="hero_desc">
+                어떠한 복잡한 서비스도 척척 만들어낼 수 있는 <br class="hidden md:block">
+                <strong class="text-brand-cyan font-semibold">문제 해결형 AI 엔지니어</strong>
+            </p>
+            <div class="flex gap-4">
+                <button class="nav-link px-8 py-4 rounded-full bg-gradient-to-r from-brand-cyan to-brand-blue text-brand-bg font-bold shadow-[0_0_20px_rgba(0,255,213,0.4)] hover:scale-105 hover:shadow-[0_0_30px_rgba(0,255,213,0.6)] transition-all" data-target="about" data-i18n="hero_btn_about">
+                    나에 대해 알아보기
+                </button>
+                <button class="nav-link px-8 py-4 rounded-full border border-brand-purple text-brand-purple dark:text-white dark:border-white/20 hover:bg-brand-purple/10 hover:scale-105 transition-all" data-target="projects" data-i18n="hero_btn_projects">
+                    프로젝트 보기
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== ABOUT & TIMELINE PAGE ==================== -->
+        <div id="page-about" class="page-view py-12 md:py-20">
+            <h2 class="text-3xl md:text-5xl font-bold text-center mb-16 bg-clip-text text-transparent bg-gradient-to-r from-brand-blue to-brand-cyan" data-i18n="nav_about">About Me</h2>
+            
+            <div class="flex flex-col md:flex-row items-center gap-12 mb-24">
+                <!-- 이미지 영역 -->
+                <div class="relative w-64 h-64 flex-shrink-0">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-brand-pink to-brand-cyan animate-morph opacity-70 blur-md"></div>
+                    <img src="이호진_증명사진.jpg" alt="이호진" class="relative w-full h-full object-cover animate-morph border-4 border-transparent bg-brand-bg" style="filter: contrast(1.2) saturate(1.3) hue-rotate(-5deg); background-image: linear-gradient(var(--color-bg), var(--color-bg)), linear-gradient(to right, #FF2DAA, #00FFD5); background-origin: border-box; background-clip: content-box, border-box;" onerror="this.src='https://placehold.co/400x400/1e1e24/00FFD5?text=HJ'">
+                </div>
+                
+                <!-- 텍스트 영역 -->
+                <div class="text-center md:text-left text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p class="mb-4" data-i18n="about_text_1">
+                        문제를 해결하고 새로운 가치를 창출하는 것에 가슴이 뛰는 프론트엔드/AI 엔지니어입니다.
+                    </p>
+                    <p data-i18n="about_text_2">
+                        어떤 복잡한 알고리즘이나 방대한 데이터 앞에서도 멈추지 않고, 사용자에게 필요한 최적의 서비스를 만들어냅니다. 미래지향적인 시각과 기술력으로 팀에 활력을 불어넣고, 함께 성장하며 놀라운 결과물을 만들어가고 싶습니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 강점 카드 (그리드 레이아웃) -->
+            <h3 class="text-2xl font-bold mb-8 text-brand-purple" data-i18n="strengths_title">Core Strengths</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-8 rounded-2xl shadow-lg hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="text-4xl mb-4 text-brand-cyan group-hover:scale-110 transition-transform">🌟</div>
+                    <h4 class="text-xl font-bold mb-3 dark:text-white" data-i18n="strength_1_title">낙천적</h4>
+                    <p class="text-gray-600 dark:text-brand-muted text-sm" data-i18n="strength_1_desc">어려운 문제 앞에서도 긍정적인 태도를 잃지 않으며, 실패를 성장의 발판으로 삼아 유쾌하게 해결합니다.</p>
+                </div>
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-8 rounded-2xl shadow-lg hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="text-4xl mb-4 text-brand-pink group-hover:scale-110 transition-transform">🔥</div>
+                    <h4 class="text-xl font-bold mb-3 dark:text-white" data-i18n="strength_2_title">열정적</h4>
+                    <p class="text-gray-600 dark:text-brand-muted text-sm" data-i18n="strength_2_desc">새로운 기술을 배우고 적용하는 데 주저함이 없으며, 스스로 연구하고 깊이 고민하여 완성도 높은 결과물을 만듭니다.</p>
+                </div>
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-8 rounded-2xl shadow-lg hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="text-4xl mb-4 text-brand-purple group-hover:scale-110 transition-transform">⚓</div>
+                    <h4 class="text-xl font-bold mb-3 dark:text-white" data-i18n="strength_3_title">끈기 있는</h4>
+                    <p class="text-gray-600 dark:text-brand-muted text-sm" data-i18n="strength_3_desc">한 번 맡은 과제는 끝까지 책임지고 완수하며, 복잡한 에러와 버그 앞에서도 집요하게 파고들어 끝내 답을 찾아냅니다.</p>
+                </div>
+            </div>
+
+            <!-- 인터랙티브 타임라인 (도전 아이디어) -->
+            <h3 class="text-2xl font-bold mb-8 text-brand-blue" data-i18n="timeline_title">My Journey</h3>
+            <div class="relative border-l-2 border-brand-cyan/30 ml-4 md:ml-0 pl-6 md:pl-0 space-y-12">
+                <!-- 타임라인 아이템 1 -->
+                <div class="relative md:flex md:justify-between md:items-center">
+                    <div class="hidden md:block md:w-5/12 text-right pr-8 text-brand-muted font-mono text-sm">2023.09 ~ 2024.02</div>
+                    <div class="absolute -left-[33px] md:left-1/2 md:-ml-3 w-6 h-6 rounded-full bg-brand-bg border-4 border-brand-cyan z-10 shadow-[0_0_10px_#00FFD5]"></div>
+                    <div class="md:w-5/12 md:pl-8 bg-white dark:bg-white/5 p-6 rounded-xl border border-gray-200 dark:border-white/10">
+                        <div class="md:hidden text-brand-cyan text-xs font-mono mb-2">2023.09 ~ 2024.02</div>
+                        <h4 class="font-bold text-lg dark:text-white">Brandol 프로젝트 (SSUMC)</h4>
+                        <p class="text-sm text-gray-600 dark:text-brand-muted mt-2">브랜드 팬덤 커뮤니티 Android 앱 개발</p>
+                    </div>
+                </div>
+                <!-- 타임라인 아이템 2 -->
+                <div class="relative md:flex md:justify-between md:items-center flex-row-reverse">
+                    <div class="hidden md:block md:w-5/12 text-left pl-8 text-brand-muted font-mono text-sm">2024.09 ~ 2025.03</div>
+                    <div class="absolute -left-[33px] md:left-1/2 md:-ml-3 w-6 h-6 rounded-full bg-brand-bg border-4 border-brand-pink z-10 shadow-[0_0_10px_#FF2DAA]"></div>
+                    <div class="md:w-5/12 md:pr-8 bg-white dark:bg-white/5 p-6 rounded-xl border border-gray-200 dark:border-white/10 text-left md:text-right">
+                        <div class="md:hidden text-brand-pink text-xs font-mono mb-2">2024.09 ~ 2025.03</div>
+                        <h4 class="font-bold text-lg dark:text-white">Vincent! 프로젝트</h4>
+                        <p class="text-sm text-gray-600 dark:text-brand-muted mt-2">숭실대 교내 콘센트 정보 크로스플랫폼 앱 구축 (Flutter)</p>
+                    </div>
+                </div>
+                <!-- 타임라인 아이템 3 -->
+                <div class="relative md:flex md:justify-between md:items-center">
+                    <div class="hidden md:block md:w-5/12 text-right pr-8 text-brand-muted font-mono text-sm">2025.03 ~ 2025.06</div>
+                    <div class="absolute -left-[33px] md:left-1/2 md:-ml-3 w-6 h-6 rounded-full bg-brand-bg border-4 border-brand-purple z-10 shadow-[0_0_10px_#7B2CFF]"></div>
+                    <div class="md:w-5/12 md:pl-8 bg-white dark:bg-white/5 p-6 rounded-xl border border-gray-200 dark:border-white/10">
+                        <div class="md:hidden text-brand-purple text-xs font-mono mb-2">2025.03 ~ 2025.06</div>
+                        <h4 class="font-bold text-lg dark:text-white">CO-OP SAP 트랙 & 숭민청원</h4>
+                        <p class="text-sm text-gray-600 dark:text-brand-muted mt-2">SAP ABAP Cloud 인증 및 캡스톤 장려상 수상</p>
+                    </div>
+                </div>
+                 <!-- 데스크톱용 중앙 선 (가상 요소 대신 div로 구현) -->
+                <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-[2px] bg-brand-cyan/20 -ml-[1px]"></div>
+            </div>
+        </div>
+
+        <!-- ==================== PROJECTS PAGE ==================== -->
+        <div id="page-projects" class="page-view py-12 md:py-20">
+            <h2 class="text-3xl md:text-5xl font-bold text-center mb-16 bg-clip-text text-transparent bg-gradient-to-r from-brand-purple to-brand-pink" data-i18n="nav_projects">Projects</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- 프로젝트 1 -->
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 cursor-pointer hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(123,44,255,0.2)] transition-all group project-card" data-project="brandol">
+                    <div class="w-16 h-16 rounded-full bg-brand-purple/20 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">💜</div>
+                    <h3 class="text-2xl font-bold mb-2 dark:text-white">Brandol</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4 text-sm" data-i18n="proj_1_desc_short">브랜드 팬덤 커뮤니티</p>
+                    <span class="inline-block px-3 py-1 bg-brand-purple/10 border border-brand-purple/30 text-brand-purple rounded-full text-xs font-bold">Android, Kotlin</span>
+                </div>
+                
+                <!-- 프로젝트 2 -->
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 cursor-pointer hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(0,255,213,0.2)] transition-all group project-card" data-project="vincent">
+                    <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">🔌</div>
+                    <h3 class="text-2xl font-bold mb-2 dark:text-white">Vincent!</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4 text-sm" data-i18n="proj_2_desc_short">숭실대 교내 콘센트 정보 서비스</p>
+                    <span class="inline-block px-3 py-1 bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan rounded-full text-xs font-bold">Flutter</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 프로젝트 모달 -->
+        <div id="project-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300">
+            <div class="bg-white dark:bg-brand-bg border border-gray-300 dark:border-brand-purple/50 rounded-2xl p-8 max-w-lg w-[90%] relative transform translate-y-8 transition-transform duration-300 shadow-[0_0_40px_rgba(123,44,255,0.3)]">
+                <button id="close-modal" class="absolute top-4 right-4 text-3xl text-gray-500 hover:text-brand-pink transition-colors">&times;</button>
+                <div class="flex items-center gap-4 mb-4">
+                    <div id="modal-icon" class="text-4xl"></div>
+                    <h3 id="modal-title" class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-purple to-brand-cyan"></h3>
+                </div>
+                <div id="modal-period" class="text-sm text-gray-500 dark:text-brand-muted mb-4 font-mono"></div>
+                <div id="modal-tech" class="mb-6"></div>
+                <p id="modal-desc" class="text-gray-700 dark:text-gray-200 leading-relaxed text-sm md:text-base"></p>
+            </div>
+        </div>
+
+        <!-- ==================== 2048 GAME PAGE ==================== -->
+        <div id="page-game2048" class="page-view py-12 md:py-20 max-w-5xl mx-auto">
+            <h2 class="text-3xl md:text-5xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-blue" data-i18n="nav_game2048">2048 Game</h2>
+            
+            <!-- 로그인/닉네임 입력 폼 -->
+            <div id="game-login-section" class="max-w-md mx-auto bg-white/50 dark:bg-white/5 p-8 rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg text-center backdrop-blur-md">
+                <div class="text-5xl mb-4">🎮</div>
+                <h3 class="text-2xl font-bold mb-4 dark:text-white" data-i18n="game_login_title">플레이어 닉네임 입력</h3>
+                <p class="text-sm text-gray-500 mb-6" data-i18n="game_login_desc">게임을 시작하고 랭킹에 도전하세요!</p>
+                <input type="text" id="player-nickname" placeholder="Nickname" class="w-full mb-4 px-4 py-3 rounded-lg bg-gray-50 dark:bg-black/50 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-brand-cyan transition-colors text-center text-xl font-bold">
+                <button id="start-game-btn" class="w-full bg-gradient-to-r from-brand-purple to-brand-pink text-white font-bold py-3 rounded-lg hover:opacity-90 hover:scale-[1.02] transition-all shadow-[0_0_15px_rgba(255,45,170,0.5)]">게임 시작</button>
+            </div>
+
+            <!-- 게임 및 랭킹 영역 (초기 숨김) -->
+            <div id="game-area-section" class="hidden flex flex-col lg:flex-row gap-8 justify-center items-start mt-8">
+                
+                <!-- 2048 보드 영역 -->
+                <div class="flex-shrink-0 mx-auto lg:mx-0 w-[300px] md:w-[400px]">
+                    <div class="flex justify-between items-center mb-4 px-2">
+                        <div class="text-lg font-bold dark:text-white">👤 <span id="current-player-name" class="text-brand-cyan ml-1"></span></div>
+                        <div class="text-xl font-bold dark:text-white bg-gray-200 dark:bg-white/10 px-4 py-2 rounded-xl shadow-inner text-neon-cyan">Score: <span id="game-score">0</span></div>
+                    </div>
+                    
+                    <div class="relative bg-gray-200 dark:bg-black/40 p-3 rounded-2xl border-2 border-gray-300 dark:border-brand-purple/30 shadow-[0_0_20px_rgba(123,44,255,0.15)] backdrop-blur-sm">
+                        <!-- 4x4 Grid -->
+                        <div id="grid-container" class="game-grid">
+                            <!-- JS로 16개 셀 생성 -->
+                        </div>
+                        
+                        <!-- 게임 오버 오버레이 -->
+                        <div id="game-over-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-md rounded-2xl hidden flex-col items-center justify-center z-10">
+                            <h3 class="text-5xl font-extrabold text-brand-pink mb-2 text-neon-cyan drop-shadow-[0_0_10px_rgba(255,45,170,0.8)]">GAME OVER</h3>
+                            <p class="text-gray-300 text-lg mb-6">최종 점수: <span id="final-score" class="font-bold text-white text-2xl ml-2"></span></p>
+                            <button id="restart-game-btn" class="px-8 py-3 bg-gradient-to-r from-brand-cyan to-brand-blue text-brand-bg font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_15px_rgba(0,255,213,0.5)]">다시 하기</button>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p class="text-gray-500 text-sm font-medium">💡 방향키(⬅️⬆️⬇️➡️) 또는 스와이프로 조작하세요.</p>
+                        <button id="logout-game-btn" class="mt-4 text-sm text-gray-400 hover:text-brand-pink underline">다른 닉네임으로 플레이</button>
+                    </div>
+                </div>
+
+                <!-- 랭킹 보드 영역 -->
+                <div class="w-full max-w-[300px] md:max-w-[400px] mx-auto lg:mx-0 bg-white/50 dark:bg-white/5 p-6 rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg backdrop-blur-md">
+                    <div class="flex items-center justify-center gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+                        <span class="text-3xl">🏆</span>
+                        <h3 class="text-2xl font-bold dark:text-white" data-i18n="game_ranking_title">명예의 전당</h3>
+                    </div>
+                    <ul id="ranking-list" class="space-y-3">
+                        <!-- JS로 랭킹 렌더링 -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CAT ROOM PAGE ==================== -->
+        <div id="page-catroom" class="page-view py-12 md:py-20 max-w-4xl mx-auto">
+            <h2 class="text-3xl md:text-5xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-pink to-brand-purple" data-i18n="cat_title">Cat Room</h2>
+            <p class="text-center text-gray-600 dark:text-brand-muted mb-8" data-i18n="cat_desc">포트폴리오에 상주하는 고양이와 놀아주세요!</p>
+            
+            <div class="flex justify-center mb-8">
+                <button id="start-chase-btn" class="px-8 py-3 bg-gradient-to-r from-brand-purple to-brand-pink text-white font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,45,170,0.5)]" data-i18n="cat_btn_chase">추격전 시작!</button>
+            </div>
+
+            <div id="cat-room-container" class="relative w-full h-[500px] bg-white/50 dark:bg-black/30 rounded-3xl border-2 border-brand-purple/30 overflow-hidden shadow-[inset_0_0_50px_rgba(123,44,255,0.1)] backdrop-blur-sm">
+                <!-- Props -->
+                <div id="prop-tower" class="cat-prop absolute left-8 bottom-8 text-6xl drop-shadow-xl" title="캣타워">🗼</div>
+                <div id="prop-bowl" class="cat-prop absolute right-12 bottom-8 text-5xl drop-shadow-xl" title="밥그릇">🥣</div>
+                <div id="prop-yarn" class="cat-prop absolute left-1/3 top-1/2 text-4xl drop-shadow-xl z-10" title="털실 장난감">🧶</div>
+                
+                <!-- The Cat -->
+                <div id="the-cat" class="absolute left-1/2 bottom-12 text-6xl cursor-pointer drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] z-50 transform -translate-x-1/2" title="꾹 누르면 배를 보여줘요!">🐈</div>
+                
+                <!-- 알림 메시지 (말풍선) -->
+                <div id="cat-message-box" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-brand-bg text-brand-pink px-6 py-3 rounded-full font-bold shadow-lg border border-brand-pink/50 opacity-0 z-40 translate-y-4"></div>
+            </div>
+            
+            <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <p>💡 고양이를 <strong class="text-brand-cyan">꾹 누르고 있으면</strong> 배를 보여줍니다.</p>
+                <p>💡 <strong class="text-brand-purple">캣타워, 밥그릇, 털실</strong>을 클릭하면 고양이가 반응합니다.</p>
+            </div>
+        </div>
+
+        <!-- ==================== GUESTBOOK PAGE (도전 아이디어) ==================== -->
+        <div id="page-guestbook" class="page-view py-12 md:py-20 max-w-3xl mx-auto">
+            <h2 class="text-3xl md:text-5xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-blue" data-i18n="nav_guestbook">Guestbook</h2>
+            <p class="text-center text-gray-600 dark:text-brand-muted mb-12" data-i18n="guestbook_sub">자유롭게 발자취를 남겨주세요!</p>
+
+            <!-- 방명록 폼 -->
+            <form id="guestbook-form" class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-6 rounded-2xl mb-12 shadow-lg">
+                <div class="mb-4">
+                    <input type="text" id="gb-name" required placeholder="이름 (Name)" class="w-full bg-gray-50 dark:bg-black/50 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-brand-cyan transition-colors">
+                </div>
+                <div class="mb-4">
+                    <textarea id="gb-message" required placeholder="메시지를 남겨주세요 (Leave a message...)" rows="3" class="w-full bg-gray-50 dark:bg-black/50 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-brand-cyan transition-colors resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-brand-blue to-brand-cyan text-brand-bg font-bold py-3 rounded-lg hover:opacity-90 transition-opacity" data-i18n="guestbook_btn">등록하기</button>
+            </form>
+
+            <!-- 방명록 리스트 -->
+            <div id="guestbook-list" class="space-y-4">
+                <!-- JS로 렌더링 됨 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="border-t border-gray-200 dark:border-white/10 py-8 text-center text-gray-500 dark:text-brand-muted text-sm mt-auto z-10 bg-white/50 dark:bg-brand-bg/50 backdrop-blur-sm">
+        <p>&copy; 2026 Lee Hojin. AI Engineer Portfolio.</p>
+        <p class="mt-2 text-xs">Simulated MPA Structure in a Single File.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SPA 라우터 로직 (MPA 흉내내기)
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pageViews = document.querySelectorAll('.page-view');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+
+            function navigateTo(targetId) {
+                // 모든 페이지 숨기기
+                pageViews.forEach(page => {
+                    page.classList.remove('active');
+                    page.style.display = 'none'; // 페이드 인 릴로드용
+                });
+                // 대상 페이지 보이기
+                const targetPage = document.getElementById(`page-${targetId}`);
+                if(targetPage) {
+                    targetPage.style.display = 'block';
+                    // 강제 리플로우 후 클래스 추가로 애니메이션 재시작
+                    void targetPage.offsetWidth; 
+                    targetPage.classList.add('active');
+                }
+
+                // 네비게이션 활성화 스타일 변경
+                document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+                    if(link.dataset.target === targetId && !link.classList.contains('flex-shrink-0')) {
+                        link.classList.add('text-brand-cyan');
+                        link.classList.remove('text-gray-600', 'dark:text-gray-300');
+                    } else if (!link.classList.contains('flex-shrink-0')) {
+                        link.classList.remove('text-brand-cyan');
+                        link.classList.add('text-gray-600', 'dark:text-gray-300');
+                    }
+                });
+
+                // 모바일 메뉴 닫기
+                mobileMenu.classList.add('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = link.getAttribute('data-target');
+                    if(target) navigateTo(target);
+                });
+            });
+
+            // 모바일 메뉴 토글
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+
+            // 2. 다크/라이트 모드 토글 (Tailwind)
+            const html = document.documentElement;
+            const themeBtns = [document.getElementById('theme-toggle'), document.getElementById('theme-toggle-mobile')];
+            
+            function toggleTheme() {
+                html.classList.toggle('dark');
+            }
+            themeBtns.forEach(btn => btn?.addEventListener('click', toggleTheme));
+
+
+            // 3. 다국어 토글 (i18n) - 2048 관련 텍스트 추가
+            let currentLang = 'ko';
+            const langBtns = [document.getElementById('lang-toggle'), document.getElementById('lang-toggle-mobile')];
+            
+            const translations = {
+                ko: {
+                    nav_home: "홈", nav_about: "소개", nav_projects: "프로젝트", nav_guestbook: "방명록", nav_game2048: "2048 게임",
+                    hero_title: "안녕하세요, <br class='md:hidden'><span class='bg-clip-text text-transparent bg-gradient-to-r from-brand-pink via-brand-purple to-brand-cyan animate-gradient-x'>이호진</span>입니다.",
+                    hero_desc: "어떠한 복잡한 서비스도 척척 만들어낼 수 있는 <br class='hidden md:block'><strong class='text-brand-cyan font-semibold'>문제 해결형 AI 엔지니어</strong>",
+                    hero_btn_about: "나에 대해 알아보기", hero_btn_projects: "프로젝트 보기",
+                    about_text_1: "문제를 해결하고 새로운 가치를 창출하는 것에 가슴이 뛰는 프론트엔드/AI 엔지니어입니다.",
+                    about_text_2: "어떤 복잡한 알고리즘이나 방대한 데이터 앞에서도 멈추지 않고, 사용자에게 필요한 최적의 서비스를 만들어냅니다. 미래지향적인 시각과 기술력으로 팀에 활력을 불어넣고, 함께 성장하며 놀라운 결과물을 만들어가고 싶습니다.",
+                    strengths_title: "Core Strengths",
+                    strength_1_title: "낙천적", strength_1_desc: "어려운 문제 앞에서도 긍정적인 태도를 잃지 않으며, 실패를 성장의 발판으로 삼아 유쾌하게 해결합니다.",
+                    strength_2_title: "열정적", strength_2_desc: "새로운 기술을 배우고 적용하는 데 주저함이 없으며, 스스로 연구하고 깊이 고민하여 완성도 높은 결과물을 만듭니다.",
+                    strength_3_title: "끈기 있는", strength_3_desc: "한 번 맡은 과제는 끝까지 책임지고 완수하며, 복잡한 에러와 버그 앞에서도 집요하게 파고들어 끝내 답을 찾아냅니다.",
+                    timeline_title: "My Journey",
+                    proj_1_desc_short: "브랜드 팬덤 커뮤니티", proj_2_desc_short: "숭실대 교내 콘센트 정보 서비스",
+                    guestbook_sub: "자유롭게 발자취를 남겨주세요!", guestbook_btn: "등록하기",
+                    game_login_title: "플레이어 닉네임 입력", game_login_desc: "게임을 시작하고 랭킹에 도전하세요!", game_ranking_title: "명예의 전당",
+                    nav_catroom: "Cat Room", cat_title: "Cat Room 🐾", cat_desc: "포트폴리오에 상주하는 고양이와 놀아주세요!", cat_btn_chase: "🏃‍♂️ 추격전 시작!"
+                },
+                en: {
+                    nav_home: "Home", nav_about: "About", nav_projects: "Projects", nav_guestbook: "Guestbook", nav_game2048: "2048 Game",
+                    hero_title: "Hello, I am <br class='md:hidden'><span class='bg-clip-text text-transparent bg-gradient-to-r from-brand-pink via-brand-purple to-brand-cyan animate-gradient-x'>Hojin Lee</span>.",
+                    hero_desc: "A Problem-Solving AI Engineer <br class='hidden md:block'><strong class='text-brand-cyan font-semibold'>capable of building any complex service.</strong>",
+                    hero_btn_about: "About Me", hero_btn_projects: "View Projects",
+                    about_text_1: "An AI Engineer whose heart beats for solving problems and creating new value.",
+                    about_text_2: "I never stop in front of complex algorithms or massive data, always striving to build the optimal service users need. I want to energize the team with a future-oriented vision and technical skills.",
+                    strengths_title: "Core Strengths",
+                    strength_1_title: "Optimistic", strength_1_desc: "Maintains a positive attitude even in difficult problems, turning failures into stepping stones for growth.",
+                    strength_2_title: "Passionate", strength_2_desc: "Never hesitates to learn and apply new technologies, creating high-quality results through deep research.",
+                    strength_3_title: "Persistent", strength_3_desc: "Takes responsibility for assigned tasks to the end, persistently digging into complex errors and bugs to find the answer.",
+                    timeline_title: "My Journey",
+                    proj_1_desc_short: "Brand Fandom Community", proj_2_desc_short: "Campus Outlet Info Service",
+                    guestbook_sub: "Leave your footprint freely!", guestbook_btn: "Submit",
+                    game_login_title: "Enter Player Nickname", game_login_desc: "Start the game and challenge the rankings!", game_ranking_title: "Hall of Fame",
+                    nav_catroom: "Cat Room", cat_title: "Cat Room 🐾", cat_desc: "Play with the resident cat of this portfolio!", cat_btn_chase: "🏃‍♂️ Start Chasing!"
+                }
+            };
+
+            function updateLanguage() {
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (translations[currentLang][key]) {
+                        el.innerHTML = translations[currentLang][key];
+                    }
+                });
+                const langLabel = currentLang === 'ko' ? 'EN' : 'KO';
+                langBtns[0].textContent = langLabel;
+                if(langBtns[1]) langBtns[1].textContent = `Language: ${currentLang.toUpperCase()} 🔄`;
+            }
+
+            langBtns.forEach(btn => {
+                btn?.addEventListener('click', () => {
+                    currentLang = currentLang === 'ko' ? 'en' : 'ko';
+                    updateLanguage();
+                });
+            });
+
+
+            // 4. 스크롤 진행률 바 (도전 아이디어)
+            const progressBar = document.getElementById('scroll-progress');
+            window.addEventListener('scroll', () => {
+                const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (winScroll / height) * 100;
+                progressBar.style.width = scrolled + "%";
+            });
+
+
+            // 5. 커스텀 마우스 커서 (도전 아이디어)
+            const cursor = document.getElementById('custom-cursor');
+            let mouseX = 0, mouseY = 0;
+            let cursorX = 0, cursorY = 0;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function animateCursor() {
+                // 부드럽게 따라오도록 선형 보간(Lerp) 적용
+                let dx = mouseX - cursorX;
+                let dy = mouseY - cursorY;
+                cursorX += dx * 0.2;
+                cursorY += dy * 0.2;
+                if(cursor) {
+                    cursor.style.left = `${cursorX}px`;
+                    cursor.style.top = `${cursorY}px`;
+                }
+                requestAnimationFrame(animateCursor);
+            }
+            if(window.matchMedia("(pointer: fine)").matches) {
+                animateCursor();
+            }
+
+            // 클릭 가능한 요소에 호버 시 커서 크기 키우기
+            document.querySelectorAll('a, button, input, textarea, .cursor-pointer, .project-card').forEach(el => {
+                el.addEventListener('mouseenter', () => cursor?.classList.add('hovering'));
+                el.addEventListener('mouseleave', () => cursor?.classList.remove('hovering'));
+            });
+
+
+            // 6. 방명록 로컬 스토리지 로직 (도전 아이디어)
+            const guestbookForm = document.getElementById('guestbook-form');
+            const guestbookList = document.getElementById('guestbook-list');
+            const STORAGE_KEY = 'hojin_guestbook';
+
+            function loadGuestbook() {
+                const data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+                guestbookList.innerHTML = '';
+                if(data.length === 0) {
+                    guestbookList.innerHTML = '<p class="text-center text-gray-500">아직 작성된 방명록이 없습니다.</p>';
+                    return;
+                }
+                data.reverse().forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-white/50 dark:bg-white/5 p-4 rounded-xl border border-gray-200 dark:border-white/10 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2';
+                    div.innerHTML = `
+                        <div>
+                            <span class="font-bold text-brand-purple dark:text-brand-cyan">${escapeHtml(item.name)}</span>
+                            <p class="text-gray-700 dark:text-gray-300 mt-1">${escapeHtml(item.message).replace(/\n/g, '<br>')}</p>
+                        </div>
+                        <span class="text-xs text-gray-400 whitespace-nowrap">${item.date}</span>
+                    `;
+                    guestbookList.appendChild(div);
+                });
+            }
+
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            guestbookForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('gb-name').value.trim();
+                const message = document.getElementById('gb-message').value.trim();
+                if(!name || !message) return;
+
+                const date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                const currentData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+                
+                currentData.push({ name, message, date });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+                
+                document.getElementById('gb-name').value = '';
+                document.getElementById('gb-message').value = '';
+                loadGuestbook();
+            });
+            loadGuestbook(); // 초기 로드
+
+
+            // 7. 프로젝트 모달 데이터 및 로직
+            const projectData = {
+                brandol: {
+                    title: "Brandol", icon: "💜", period: "2023.12.01 ~ 2024.02.28",
+                    tech: "Android, Kotlin",
+                    desc: "SSUMC(연합 개발동아리)에서 진행한 브랜드 팬덤 커뮤니티 앱 프로젝트입니다. 안드로이드 환경에서 사용자가 좋아하는 브랜드를 중심으로 팬덤에 참여하고 소통할 수 있는 네이티브 애플리케이션을 개발했습니다."
+                },
+                vincent: {
+                    title: "Vincent!", icon: "🔌", period: "2024.09.01 ~ 2025.02.28",
+                    tech: "Flutter",
+                    desc: "숭실대학교 Pre-startup 창업 동아리에서 기획 및 개발한 교내 콘센트 정보 서비스입니다. 캠퍼스 내 빈 콘센트의 위치를 실시간 공유하여 학생들의 전자기기 사용 편의성을 크게 높이는 크로스 플랫폼 앱을 구축했습니다."
+                }
+            };
+
+            const modal = document.getElementById('project-modal');
+            const closeBtn = document.getElementById('close-modal');
+            const modalInner = modal.querySelector('div');
+
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.getAttribute('data-project');
+                    const data = projectData[id];
+                    if(data) {
+                        document.getElementById('modal-icon').textContent = data.icon;
+                        document.getElementById('modal-title').textContent = data.title;
+                        document.getElementById('modal-period').textContent = "진행 기간: " + data.period;
+                        document.getElementById('modal-tech').innerHTML = `<span class="inline-block px-3 py-1 bg-brand-cyan/20 border border-brand-cyan/50 text-brand-cyan rounded-full text-xs font-bold">${data.tech}</span>`;
+                        document.getElementById('modal-desc').textContent = data.desc;
+                        
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                        setTimeout(() => {
+                            modal.classList.remove('opacity-0');
+                            modalInner.classList.remove('translate-y-8');
+                        }, 10);
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+            });
+
+            function closeModal() {
+                modal.classList.add('opacity-0');
+                modalInner.classList.add('translate-y-8');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+
+
+            // 8. 파티클 애니메이션 배경 (도전 아이디어)
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let particlesArray = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + Math.random() * 100;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedY = Math.random() * -1 - 0.5;
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    // 테마에 맞는 색상 랜덤 선택
+                    const colors = ['rgba(255, 45, 170, 0.4)', 'rgba(0, 255, 213, 0.4)', 'rgba(123, 44, 255, 0.4)'];
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
+                }
+                update() {
+                    this.y += this.speedY;
+                    this.x += this.speedX;
+                    // 화면 밖으로 나가면 아래에서 재배치
+                    if (this.y < -10 || this.x < -10 || this.x > canvas.width + 10) {
+                        this.y = canvas.height + 10;
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particlesArray = [];
+                const numberOfParticles = Math.min(window.innerWidth / 15, 80); // 기기 성능 고려
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particlesArray.push(new Particle());
+                }
+            }
+            initParticles();
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // 다크모드 여부에 따라 파티클 보임 정도 조절
+                const isDark = html.classList.contains('dark');
+                if(isDark) {
+                    for (let i = 0; i < particlesArray.length; i++) {
+                        particlesArray[i].update();
+                        particlesArray[i].draw();
+                    }
+                }
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+
+            
+            // 9. 2048 게임 로직 및 랭킹 시스템
+            const RANKING_STORE_KEY = 'hojin_2048_rankings';
+            let gameBoard = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+            let gameScore = 0;
+            let currentPlayer = '';
+            let gameActive = false;
+
+            const domElements = {
+                loginSection: document.getElementById('game-login-section'),
+                gameArea: document.getElementById('game-area-section'),
+                playerInput: document.getElementById('player-nickname'),
+                startBtn: document.getElementById('start-game-btn'),
+                playerNameDisplay: document.getElementById('current-player-name'),
+                scoreDisplay: document.getElementById('game-score'),
+                gridContainer: document.getElementById('grid-container'),
+                gameOverOverlay: document.getElementById('game-over-overlay'),
+                finalScore: document.getElementById('final-score'),
+                restartBtn: document.getElementById('restart-game-btn'),
+                logoutBtn: document.getElementById('logout-game-btn'),
+                rankingList: document.getElementById('ranking-list')
+            };
+
+            // 16개 셀 초기 렌더링
+            for(let i=0; i<16; i++) {
+                let cell = document.createElement('div');
+                cell.className = 'game-cell';
+                cell.id = `cell-${Math.floor(i/4)}-${i%4}`;
+                domElements.gridContainer.appendChild(cell);
+            }
+
+            // 로그인 및 게임 시작
+            domElements.startBtn.addEventListener('click', () => {
+                const name = domElements.playerInput.value.trim();
+                if(!name) { alert('닉네임을 입력해주세요!'); return; }
+                
+                currentPlayer = name;
+                domElements.playerNameDisplay.textContent = currentPlayer;
+                
+                domElements.loginSection.classList.add('hidden');
+                domElements.gameArea.classList.remove('hidden');
+                
+                loadRankings();
+                initGame();
+            });
+
+            domElements.playerInput.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') domElements.startBtn.click();
+            });
+
+            // 로그아웃
+            domElements.logoutBtn.addEventListener('click', () => {
+                gameActive = false;
+                domElements.gameArea.classList.add('hidden');
+                domElements.loginSection.classList.remove('hidden');
+                domElements.playerInput.value = '';
+            });
+
+            // 재시작
+            domElements.restartBtn.addEventListener('click', () => {
+                domElements.gameOverOverlay.classList.add('hidden');
+                initGame();
+            });
+
+            function initGame() {
+                gameBoard = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+                gameScore = 0;
+                gameActive = true;
+                updateScore(0);
+                addRandomTile();
+                addRandomTile();
+                renderBoard();
+            }
+
+            function addRandomTile() {
+                let emptyCells = [];
+                for(let r=0; r<4; r++) {
+                    for(let c=0; c<4; c++) {
+                        if(gameBoard[r][c] === 0) emptyCells.push({r,c});
+                    }
+                }
+                if(emptyCells.length > 0) {
+                    let randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    gameBoard[randomCell.r][randomCell.c] = Math.random() < 0.9 ? 2 : 4;
+                    // 방금 추가된 타일에 팝업 애니메이션 효과 부여용
+                    let cellEl = document.getElementById(`cell-${randomCell.r}-${randomCell.c}`);
+                    cellEl.classList.remove('tile-pop');
+                    void cellEl.offsetWidth; // reflow
+                    cellEl.classList.add('tile-pop');
+                }
+            }
+
+            function renderBoard() {
+                for(let r=0; r<4; r++) {
+                    for(let c=0; c<4; c++) {
+                        let cell = document.getElementById(`cell-${r}-${c}`);
+                        let val = gameBoard[r][c];
+                        cell.className = 'game-cell'; // reset classes
+                        
+                        if(val > 0) {
+                            cell.textContent = val;
+                            // 2048 이상은 super 클래스 적용
+                            let tileClass = val <= 2048 ? `tile-${val}` : 'tile-super';
+                            cell.classList.add(tileClass);
+                        } else {
+                            cell.textContent = '';
+                        }
+                    }
+                }
+            }
+
+            function updateScore(add) {
+                gameScore += add;
+                domElements.scoreDisplay.textContent = gameScore;
+            }
+
+            // 배열 슬라이드 및 병합 로직 (핵심)
+            function slideAndMerge(row) {
+                // 1. 0 제거 (한쪽으로 밀기)
+                let newRow = row.filter(val => val !== 0);
+                let scoreIncrease = 0;
+                // 2. 인접한 같은 숫자 병합
+                for(let i=0; i<newRow.length-1; i++) {
+                    if(newRow[i] === newRow[i+1]) {
+                        newRow[i] *= 2;
+                        scoreIncrease += newRow[i];
+                        newRow.splice(i+1, 1);
+                    }
+                }
+                // 3. 다시 4칸으로 맞추기
+                while(newRow.length < 4) newRow.push(0);
+                return { newRow, scoreIncrease };
+            }
+
+            function move(direction) {
+                if(!gameActive) return;
+                let moved = false;
+                let totalScoreIncrease = 0;
+
+                for(let i=0; i<4; i++) {
+                    let row = [];
+                    // 방향에 따라 배열 추출
+                    for(let j=0; j<4; j++) {
+                        if(direction === 'ArrowLeft' || direction === 'ArrowRight') row.push(gameBoard[i][j]);
+                        else row.push(gameBoard[j][i]);
+                    }
+
+                    if(direction === 'ArrowRight' || direction === 'ArrowDown') row.reverse();
+
+                    let { newRow, scoreIncrease } = slideAndMerge(row);
+                    totalScoreIncrease += scoreIncrease;
+
+                    if(direction === 'ArrowRight' || direction === 'ArrowDown') newRow.reverse();
+
+                    // 변경사항 보드에 적용
+                    for(let j=0; j<4; j++) {
+                        let oldVal = direction === 'ArrowLeft' || direction === 'ArrowRight' ? gameBoard[i][j] : gameBoard[j][i];
+                        if(oldVal !== newRow[j]) moved = true;
+                        
+                        if(direction === 'ArrowLeft' || direction === 'ArrowRight') gameBoard[i][j] = newRow[j];
+                        else gameBoard[j][i] = newRow[j];
+                    }
+                }
+
+                if(moved) {
+                    updateScore(totalScoreIncrease);
+                    addRandomTile();
+                    renderBoard();
+                    checkGameOver();
+                }
+            }
+
+            function checkGameOver() {
+                // 빈 칸이 있으면 진행 가능
+                for(let r=0; r<4; r++) {
+                    for(let c=0; c<4; c++) {
+                        if(gameBoard[r][c] === 0) return;
+                    }
+                }
+                // 인접한 같은 숫자가 있으면 진행 가능
+                for(let r=0; r<4; r++) {
+                    for(let c=0; c<4; c++) {
+                        if(c<3 && gameBoard[r][c] === gameBoard[r][c+1]) return;
+                        if(r<3 && gameBoard[r][c] === gameBoard[r+1][c]) return;
+                    }
+                }
+
+                // 게임 오버 처리
+                gameActive = false;
+                domElements.finalScore.textContent = gameScore;
+                domElements.gameOverOverlay.classList.remove('hidden');
+                domElements.gameOverOverlay.classList.add('flex');
+                
+                saveRanking(currentPlayer, gameScore);
+            }
+
+            // 키보드 조작 이벤트
+            window.addEventListener('keydown', (e) => {
+                // 현재 보이는 페이지가 2048일 때만 작동
+                if(document.getElementById('page-game2048').classList.contains('active')) {
+                    if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                        e.preventDefault(); // 방향키 스크롤 방지
+                        move(e.key);
+                    }
+                }
+            });
+
+            // 모바일 터치(스와이프) 이벤트
+            let touchStartX = 0; let touchStartY = 0;
+            domElements.gridContainer.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+
+            domElements.gridContainer.addEventListener('touchend', e => {
+                if(!gameActive) return;
+                let touchEndX = e.changedTouches[0].screenX;
+                let touchEndY = e.changedTouches[0].screenY;
+                
+                let dx = touchEndX - touchStartX;
+                let dy = touchEndY - touchStartY;
+                
+                if(Math.abs(dx) > Math.abs(dy)) {
+                    if(dx > 30) move('ArrowRight');
+                    else if(dx < -30) move('ArrowLeft');
+                } else {
+                    if(dy > 30) move('ArrowDown');
+                    else if(dy < -30) move('ArrowUp');
+                }
+            });
+
+            function saveRanking(name, score) {
+                let rankings = JSON.parse(localStorage.getItem(RANKING_STORE_KEY)) || [];
+                rankings.push({ name, score, date: new Date().toLocaleDateString() });
+                
+                // 점수 내림차순 정렬 후 상위 10개만 유지
+                rankings.sort((a, b) => b.score - a.score);
+                rankings = rankings.slice(0, 10);
+                
+                localStorage.setItem(RANKING_STORE_KEY, JSON.stringify(rankings));
+                loadRankings(); // UI 업데이트
+            }
+
+            function loadRankings() {
+                let rankings = JSON.parse(localStorage.getItem(RANKING_STORE_KEY)) || [];
+                domElements.rankingList.innerHTML = '';
+                
+                if(rankings.length === 0) {
+                    domElements.rankingList.innerHTML = '<li class="text-center text-gray-500 py-4">아직 등록된 랭킹이 없습니다.</li>';
+                    return;
+                }
+
+                rankings.forEach((rank, index) => {
+                    let li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-50 dark:bg-black/40 p-3 rounded-lg border border-gray-200 dark:border-white/5';
+                    
+                    // 메달 아이콘 처리
+                    let medal = '';
+                    if(index === 0) medal = '🥇';
+                    else if(index === 1) medal = '🥈';
+                    else if(index === 2) medal = '🥉';
+                    else medal = `<span class="w-6 inline-block text-center text-gray-400 font-bold">${index + 1}</span>`;
+
+                    // 내가 방금 낸 기록이면 강조 표시
+                    let highlightClass = (rank.name === currentPlayer && rank.score === gameScore && !gameActive) ? 'text-brand-pink font-extrabold' : 'text-gray-900 dark:text-gray-200';
+
+                    li.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">${medal}</span>
+                            <span class="font-bold ${highlightClass}">${escapeHtml(rank.name)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-brand-cyan font-bold block">${rank.score.toLocaleString()}</span>
+                            <span class="text-xs text-gray-400">${rank.date}</span>
+                        </div>
+                    `;
+                    domElements.rankingList.appendChild(li);
+                });
+            }
+
+            // 10. Cat Room 로직
+            const theCat = document.getElementById('the-cat');
+            const propTower = document.getElementById('prop-tower');
+            const propBowl = document.getElementById('prop-bowl');
+            const propYarn = document.getElementById('prop-yarn');
+            const chaseBtn = document.getElementById('start-chase-btn');
+            const roomContainer = document.getElementById('cat-room-container');
+            const catMessageBox = document.getElementById('cat-message-box');
+
+            let isChasing = false;
+            let bellyTimer = null;
+            let catEmoji = '🐈';
+
+            function showCatMessage(msg) {
+                catMessageBox.textContent = msg;
+                catMessageBox.classList.remove('opacity-0', 'translate-y-4');
+                catMessageBox.classList.add('-translate-y-4');
+                setTimeout(() => {
+                    catMessageBox.classList.add('opacity-0', 'translate-y-4');
+                    catMessageBox.classList.remove('-translate-y-4');
+                }, 2000);
+            }
+
+            // 1. 배 보여주기 (Belly Rub)
+            theCat.addEventListener('mousedown', () => {
+                if(isChasing) return;
+                bellyTimer = setTimeout(() => {
+                    theCat.classList.add('belly-rub');
+                    theCat.textContent = '😻';
+                    showCatMessage("골골골...");
+                }, 300);
+            });
+
+            const clearBelly = () => {
+                clearTimeout(bellyTimer);
+                if(theCat.classList.contains('belly-rub')) {
+                    theCat.classList.remove('belly-rub');
+                    theCat.textContent = catEmoji;
+                }
+            };
+            theCat.addEventListener('mouseup', clearBelly);
+            theCat.addEventListener('mouseleave', clearBelly);
+            theCat.addEventListener('touchstart', (e) => {
+                if(isChasing) return;
+                bellyTimer = setTimeout(() => {
+                    theCat.classList.add('belly-rub');
+                    theCat.textContent = '😻';
+                    showCatMessage("골골골...");
+                }, 300);
+            }, {passive: true});
+            theCat.addEventListener('touchend', clearBelly);
+
+            // 2. 캣타워 & 밥그릇 상호작용
+            propTower.addEventListener('click', () => {
+                if(isChasing) return;
+                theCat.style.left = '80px';
+                theCat.style.bottom = '120px';
+                theCat.style.transform = 'translateX(0)';
+                catEmoji = '🐈‍⬛';
+                theCat.textContent = catEmoji;
+                showCatMessage("야옹! (높은 곳 정복)");
+            });
+
+            propBowl.addEventListener('click', () => {
+                if(isChasing) return;
+                theCat.style.left = 'calc(100% - 100px)';
+                theCat.style.bottom = '30px';
+                theCat.style.transform = 'translateX(0)';
+                catEmoji = '👅';
+                theCat.textContent = catEmoji;
+                showCatMessage("냠냠챱챱...");
+                setTimeout(() => {
+                    catEmoji = '🐈';
+                    theCat.textContent = catEmoji;
+                }, 3000);
+            });
+
+            // 3. 털실 장난감
+            propYarn.addEventListener('click', () => {
+                if(isChasing) return;
+                const rWidth = roomContainer.offsetWidth;
+                const rHeight = roomContainer.offsetHeight;
+                const rX = Math.random() * (rWidth - 100) + 50;
+                const rY = Math.random() * (rHeight - 200) + 50;
+                
+                propYarn.style.left = `${rX}px`;
+                propYarn.style.top = `${rY}px`;
+                propYarn.style.bottom = 'auto';
+
+                setTimeout(() => {
+                    theCat.style.left = `${rX + 30}px`;
+                    theCat.style.bottom = `${rHeight - rY - 40}px`;
+                    theCat.style.transform = 'translateX(-50%)';
+                    catEmoji = '😼'; 
+                    theCat.textContent = catEmoji;
+                    showCatMessage("잡았다냥!");
+                }, 300);
+            });
+
+            // 4. 추격전 (Chasing)
+            chaseBtn.addEventListener('click', () => {
+                if(isChasing) return;
+                isChasing = true;
+                
+                theCat.classList.add('chasing-mode');
+                catEmoji = '🙀';
+                theCat.textContent = catEmoji;
+                
+                document.body.appendChild(theCat);
+                
+                const startX = window.innerWidth / 2;
+                const startY = window.innerHeight / 2;
+                theCat.style.left = `${startX}px`;
+                theCat.style.top = `${startY}px`;
+                theCat.style.bottom = 'auto';
+                theCat.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                
+                const chaseMsg = document.createElement('div');
+                chaseMsg.id = 'chase-global-msg';
+                chaseMsg.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-brand-pink text-white px-6 py-3 rounded-full font-bold shadow-[0_0_20px_rgba(255,45,170,0.6)] z-[9999] pointer-events-none transition-opacity duration-500';
+                chaseMsg.textContent = "고양이가 도망갔어요! 마우스를 피해 도망갑니다! 클릭해서 잡아주세요!";
+                document.body.appendChild(chaseMsg);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if(!isChasing) return;
+                const rect = theCat.getBoundingClientRect();
+                const cX = rect.left + rect.width / 2;
+                const cY = rect.top + rect.height / 2;
+                const dx = cX - e.clientX;
+                const dy = cY - e.clientY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // 마우스가 180px 안에 들어오면 도망감
+                if(dist < 180) {
+                    const angle = Math.atan2(dy, dx);
+                    let nx = cX + Math.cos(angle) * 200;
+                    let ny = cY + Math.sin(angle) * 200;
+                    
+                    const p = 50;
+                    if(nx < p) nx = p;
+                    if(nx > window.innerWidth - p) nx = window.innerWidth - p;
+                    if(ny < p) ny = p;
+                    if(ny > window.innerHeight - p) ny = window.innerHeight - p;
+                    
+                    theCat.style.left = `${nx}px`;
+                    theCat.style.top = `${ny}px`;
+                }
+            });
+
+            theCat.addEventListener('click', () => {
+                if(!isChasing) return;
+                isChasing = false;
+                theCat.classList.remove('chasing-mode');
+                catEmoji = '😻';
+                theCat.textContent = catEmoji;
+                theCat.style.transform = 'translateX(-50%)';
+                
+                const chaseMsg = document.getElementById('chase-global-msg');
+                if(chaseMsg) {
+                    chaseMsg.textContent = "잡혔다냥... 💦 (Cat Room으로 돌아갑니다)";
+                    setTimeout(() => chaseMsg.remove(), 2500);
+                }
+
+                roomContainer.appendChild(theCat);
+                theCat.style.top = 'auto';
+                theCat.style.left = '50%';
+                theCat.style.bottom = '48px';
+                
+                setTimeout(() => {
+                    catEmoji = '🐈';
+                    theCat.textContent = catEmoji;
+                    showCatMessage("휴... 살았다냥");
+                }, 2000);
+            });
+
+        });
+    </script>
+</body>
+</html>
